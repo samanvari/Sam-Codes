@@ -28,9 +28,20 @@
             color: black;
             z-index: 10;
         }
+        #instructions {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 18px;
+            text-align: center;
+            color: black;
+            z-index: 10;
+        }
     </style>
 </head>
 <body>
+    <div id="instructions">Hit Spacebar to start Drawing. Hit it again to stop. Save your drawing with Ctrl+S</div>
     <div id="title">CSULB</div>
     <canvas id="canvas"></canvas>
     <div id="coords" class="coords"></div>
@@ -40,6 +51,7 @@
         const ctx = canvas.getContext('2d');
         const coordsDiv = document.getElementById('coords');
         const titleDiv = document.getElementById('title');
+        const instructionsDiv = document.getElementById('instructions');
 
         let drawing = false;
         let prevX = null;
@@ -58,7 +70,7 @@
             canvas.width = window.innerWidth - borderThickness * 2;
             canvas.height = window.innerHeight - borderThickness * 2;
             canvas.style.left = `${borderThickness}px`;
-            canvas.style.top = `${borderThickness}px`;
+            canvas.style.top = `${borderThickness + 40}px`;  // Adjust for the title and instructions height
         }
 
         function updateTitlePosition() {
