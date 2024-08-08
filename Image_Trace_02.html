@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Page</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #f0f0f0;
+        }
+        #movingText {
+            position: absolute;
+            font-family: Arial, sans-serif;
+            font-weight: bold;
+            font-size: 64px;
+            color: black;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        #coordinates {
+            position: absolute;
+            pointer-events: none;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            background-color: transparent;
+            color: black;
+        }
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+        .border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border: 15px solid red;
+            box-sizing: border-box;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="movingText">CSULB</div>
+    <div id="coordinates"></div>
+    <canvas id="drawingCanvas"></canvas>
+    <div class="border"></div>
+    
+    <script>
+        const textElement = document.getElementById('movingText');
+        const coordinatesElement = document.getElementById('coordinates');
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let drawMode = false;
+        let textX = 0;
+        let textY = 0;
+        let textDX = 2;
+        let textDY = 2;
+        const textSize = 64;
+        const borderSize = 15;
+        const minDistance = 25;
+
+        function updateCanvasSize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        function updateTextPosition() {
+            textX += textDX;
+            textY += textDY;
+
+            if (textX < borderSize + minDistance || textX > window.innerWidth - textSize - borderSize - minDistance) {
+                textDX = -textDX;
+            }
+            if (textY < borderSize + minDistance || textY > window.innerHeight - textSize - borderSize - minDistance) {
+                textDY = -textDY;
+            }
+
+            textElement.style.left = `${textX}px`;
+            textElement.style.top = `${textY}px`;
+        }
+
+        function drawLine(x, y) {
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 1;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+        }
+
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function saveScreenshot() {
+            const link = document.createElement('a');
+            link.href = canvas.toDataURL('image/png');
+            link.download = 'screenshot.png';
+            link.click();
+        }
+
+        function handleMouseMove(event) {
+            const x = event.clientX;
+            const y = event.clientY;
+
+            coordinatesElement.style.left = `${x + 10}px`;
+            coordinatesElement.style.top = `${y + 10}px`;
+            coordinatesElement.textContent = `X: ${x}, Y: ${y}`;
+
+            if (drawMode) {
+                if (x > borderSize + minDistance && x < window.innerWidth - borderSize - minDistance &&
+                    y > borderSize + minDistance && y < window.innerHeight - borderSize - minDistance) {
+                    drawLine(x, y);
+                }
+            }
+        }
+
+        function toggleDrawMode(event) {
+            if (event.code === 'Space') {
+                drawMode = !drawMode;
+                if (drawMode) {
+                    canvas.addEventListener('mousemove', handleMouseMove);
+                } else {
+                    canvas.removeEventListener('mousemove', handleMouseMove);
+                    clearCanvas();
+                }
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.ctrlKey && event.code === 'KeyS') {
+                event.preventDefault();
+                saveScreenshot();
+            }
+        }
+
+        function animationLoop() {
+            updateTextPosition();
+            requestAnimationFrame(animationLoop);
+        }
+
+        window.addEventListener('resize', updateCanvasSize);
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('keydown', toggleDrawMode);
+        window.addEventListener('keydown', handleKeyPress);
+
+        updateCanvasSize();
+        animationLoop();
+    </script>
+</body>
+</html>
