@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse Tracker with Moving Text</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            border: 15px solid red;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            position: relative;
+        }
+        .coords {
+            position: absolute;
+            font-size: 14px;
+            color: black;
+        }
+        #canvas {
+            display: block;
+        }
+        #title {
+            position: absolute;
+            font-size: 64px;
+            font-weight: bold;
+            color: black;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+    <div id="title">CSULB</div>
+    <canvas id="canvas"></canvas>
+    <div id="coords" class="coords"></div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const coordsDiv = document.getElementById('coords');
+        const titleDiv = document.getElementById('title');
+
+        let drawing = false;
+        let prevX = null;
+        let prevY = null;
+
+        const borderThickness = 15;
+        const safeZone = 25;
+        const totalMargin = borderThickness + safeZone;
+
+        let titleX = Math.random() * (window.innerWidth - 64);
+        let titleY = Math.random() * (window.innerHeight - 64);
+        let titleVelocityX = (Math.random() - 0.5) * 4;
+        let titleVelocityY = (Math.random() - 0.5) * 4;
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth - borderThickness * 2;
+            canvas.height = window.innerHeight - borderThickness * 2;
+            canvas.style.left = `${borderThickness}px`;
+            canvas.style.top = `${borderThickness}px`;
+        }
+
+        function updateTitlePosition() {
+            titleX += titleVelocityX;
+            titleY += titleVelocityY;
+
+            if (titleX <= 0 || titleX >= window.innerWidth - 64) {
+                titleVelocityX = -titleVelocityX;
+            }
+            if (titleY <= 0 || titleY >= window.innerHeight - 64) {
+                titleVelocityY = -titleVelocityY;
+            }
+
+            titleDiv.style.left = `${titleX}px`;
+            titleDiv.style.top = `${titleY}px`;
+        }
+
+        function animate() {
+            updateTitlePosition();
+            requestAnimationFrame(animate);
+        }
+
+        function saveScreenshot() {
+            const screenshotCanvas = document.createElement('canvas');
+            const screenshotCtx = screenshotCanvas.getContext('2d');
+            screenshotCanvas.width = window.innerWidth;
+            screenshotCanvas.height = window.innerHeight;
+
+            screenshotCtx.fillStyle = 'white';
+            screenshotCtx.fillRect(0, 0, screenshotCanvas.width, screenshotCanvas.height);
+
+            screenshotCtx.drawImage(canvas, borderThickness, borderThickness);
+            screenshotCtx.fillStyle = 'black';
+            screenshotCtx.font = '64px Arial';
+            screenshotCtx.fillText('CSULB', titleX, titleY);
+
+            const link = document.createElement('a');
+            link.href = screenshotCanvas.toDataURL('image/png');
+            link.download = 'screenshot.png';
+            link.click();
+        }
+
+        resizeCanvas();
+        animate();
+
+        window.addEventListener('resize', resizeCanvas);
+
+        document.addEventListener('mousemove', (e) => {
+            let mouseX = e.pageX;
+            let mouseY = e.pageY;
+
+            if (mouseX < totalMargin) mouseX = totalMargin;
+            if (mouseX > window.innerWidth - totalMargin) mouseX = window.innerWidth - totalMargin;
+            if (mouseY < totalMargin) mouseY = totalMargin;
+            if (mouseY > window.innerHeight - totalMargin) mouseY = window.innerHeight - totalMargin;
+
+            coordsDiv.style.left = `${mouseX + 10}px`;
+            coordsDiv.style.top = `${mouseY + 10}px`;
+            coordsDiv.innerHTML = `x=${mouseX}<br>y=${mouseY}`;
+
+            if (drawing) {
+                if (prevX !== null && prevY !== null) {
+                    ctx.strokeStyle = 'red';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(prevX - borderThickness, prevY - borderThickness);
+                    ctx.lineTo(mouseX - borderThickness, mouseY - borderThickness);
+                    ctx.stroke();
+                }
+                prevX = mouseX;
+                prevY = mouseY;
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                drawing = !drawing;
+                if (!drawing) {
+                    prevX = null;
+                    prevY = null;
+                }
+                e.preventDefault();
+            }
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveScreenshot();
+            }
+        });
+    </script>
+</body>
+</html>
